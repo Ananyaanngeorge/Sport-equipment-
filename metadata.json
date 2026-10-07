@@ -1,0 +1,6 @@
+{
+  "name": "Sports Equipment Management System",
+  "description": "A complete, beginner-friendly Java college project featuring Java Swing frontend, Spring Boot backend, REST API, Spring Data JPA, and MySQL.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

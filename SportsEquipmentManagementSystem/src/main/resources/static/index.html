@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sports Equipment Management System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Google Fonts for clean typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-icon">⚽</div>
+                <div class="logo-text">
+                    <h2>SPORTS DESK</h2>
+                    <span class="subtext">College Inventory</span>
+                </div>
+                <button class="mobile-close-btn" id="sidebarCloseBtn" aria-label="Close Sidebar">&times;</button>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-page="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-label">Dashboard</span>
+                </button>
+                <button class="nav-item" data-page="equipment">
+                    <span class="nav-icon">⚽</span>
+                    <span class="nav-label">Equipment</span>
+                </button>
+                <button class="nav-item" data-page="students">
+                    <span class="nav-icon">🎓</span>
+                    <span class="nav-label">Students</span>
+                </button>
+                <button class="nav-item" data-page="issue">
+                    <span class="nav-icon">📤</span>
+                    <span class="nav-label">Issue Equipment</span>
+                </button>
+                <button class="nav-item" data-page="return">
+                    <span class="nav-icon">📥</span>
+                    <span class="nav-label">Return Equipment</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="project-info">
+                    <p class="team-label">Team CSE • Project</p>
+                    <p class="tech-label">Java 21 • Spring Boot • MySQL</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="main-wrapper">
+            <!-- Top Navigation Bar -->
+            <header class="top-navbar">
+                <div class="top-nav-left">
+                    <button class="hamburger-btn" id="sidebarToggleBtn" aria-label="Toggle Navigation">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    <h1 class="page-title" id="pageTitle">System Overview</h1>
+                </div>
+
+                <div class="top-nav-right">
+                    <span class="status-indicator online">
+                        <span class="status-dot"></span>
+                        <span class="status-text">Connected to MySQL</span>
+                    </span>
+                    <button class="btn btn-secondary btn-sm" id="btnRefreshData">
+                        <span class="btn-icon">↻</span> Refresh
+                    </button>
+                </div>
+            </header>
+
+            <!-- Notification Toast Container -->
+            <div class="toast-container" id="toastContainer"></div>
+
+            <!-- Page Sections Container -->
+            <main class="content-area">
+                <!-- ========================================== -->
+                <!-- 1. DASHBOARD PAGE                          -->
+                <!-- ========================================== -->
+                <section class="page-section active" id="section-dashboard">
+                    <!-- KPI Cards Grid -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card card-blue">
+                            <div class="kpi-content">
+                                <span class="kpi-title">Equipment Types</span>
+                                <h3 class="kpi-value" id="kpiTotalTypes">0</h3>
+                                <span class="kpi-desc">Distinct items in catalog</span>
+                            </div>
+                            <div class="kpi-icon-badge">📦</div>
+                        </div>
+
+                        <div class="kpi-card card-green">
+                            <div class="kpi-content">
+                                <span class="kpi-title">Total Quantity</span>
+                                <h3 class="kpi-value" id="kpiTotalQuantity">0</h3>
+                                <span class="kpi-desc">Total units owned</span>
+                            </div>
+                            <div class="kpi-icon-badge">🔢</div>
+                        </div>
+
+                        <div class="kpi-card card-sky">
+                            <div class="kpi-content">
+                                <span class="kpi-title">Available Stock</span>
+                                <h3 class="kpi-value" id="kpiAvailableQuantity">0</h3>
+                                <span class="kpi-desc">Ready for checkout</span>
+                            </div>
+                            <div class="kpi-icon-badge">✅</div>
+                        </div>
+
+                        <div class="kpi-card card-amber">
+                            <div class="kpi-content">
+                                <span class="kpi-title">Currently Issued</span>
+                                <h3 class="kpi-value" id="kpiIssuedQuantity">0</h3>
+                                <span class="kpi-desc">Active student borrowings</span>
+                            </div>
+                            <div class="kpi-icon-badge">🔄</div>
+                        </div>
+
+                        <div class="kpi-card card-purple">
+                            <div class="kpi-content">
+                                <span class="kpi-title">Registered Students</span>
+                                <h3 class="kpi-value" id="kpiRegisteredStudents">0</h3>
+                                <span class="kpi-desc">Authorized borrowers</span>
+                            </div>
+                            <div class="kpi-icon-badge">🎓</div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Dual Tables: Recent Transactions + Inventory Summary -->
+                    <div class="dual-grid">
+                        <div class="panel-card">
+                            <div class="panel-header">
+                                <h3 class="panel-title">Recent Transactions</h3>
+                                <span class="panel-subtitle">Latest gear issues &amp; returns</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Student</th>
+                                            <th>Equipment</th>
+                                            <th>Qty</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentTransactionsTableBody">
+                                        <tr><td colspan="6" class="text-center">Loading transactions...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="panel-card">
+                            <div class="panel-header">
+                                <h3 class="panel-title">Equipment Inventory Summary</h3>
+                                <span class="panel-subtitle">Current stock distribution</span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Equipment</th>
+                                            <th>Category</th>
+                                            <th>Total</th>
+                                            <th>Available</th>
+                                            <th>Issued</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="inventorySummaryTableBody">
+                                        <tr><td colspan="5" class="text-center">Loading inventory...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ========================================== -->
+                <!-- 2. EQUIPMENT MANAGEMENT PAGE               -->
+                <!-- ========================================== -->
+                <section class="page-section" id="section-equipment">
+                    <div class="section-toolbar">
+                        <div class="toolbar-left">
+                            <div class="search-box">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" id="equipmentSearchInput" placeholder="Search equipment by name...">
+                            </div>
+                            <div class="filter-box">
+                                <label for="equipmentCategoryFilter">Category:</label>
+                                <select id="equipmentCategoryFilter">
+                                    <option value="All">All Categories</option>
+                                    <option value="Indoor">Indoor</option>
+                                    <option value="Outdoor">Outdoor</option>
+                                    <option value="Fitness">Fitness</option>
+                                    <option value="Athletics">Athletics</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="toolbar-right">
+                            <button class="btn btn-primary" id="btnOpenAddEquipmentModal">
+                                <span class="btn-icon">+</span> Add New Equipment
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Equipment Name</th>
+                                        <th>Category</th>
+                                        <th>Total Qty</th>
+                                        <th>Available Qty</th>
+                                        <th>Description</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="equipmentTableBody">
+                                    <tr><td colspan="7" class="text-center">Loading equipment records...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ========================================== -->
+                <!-- 3. STUDENT MANAGEMENT PAGE                 -->
+                <!-- ========================================== -->
+                <section class="page-section" id="section-students">
+                    <div class="section-toolbar">
+                        <div class="toolbar-left">
+                            <div class="search-box">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" id="studentSearchInput" placeholder="Search by student name or department...">
+                            </div>
+                        </div>
+                        <div class="toolbar-right">
+                            <button class="btn btn-primary" id="btnOpenAddStudentModal">
+                                <span class="btn-icon">+</span> Register Student
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Full Name</th>
+                                        <th>College Email</th>
+                                        <th>Phone</th>
+                                        <th>Department</th>
+                                        <th>Class / Semester</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="studentsTableBody">
+                                    <tr><td colspan="7" class="text-center">Loading registered students...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ========================================== -->
+                <!-- 4. ISSUE EQUIPMENT PAGE                    -->
+                <!-- ========================================== -->
+                <section class="page-section" id="section-issue">
+                    <div class="form-card-container">
+                        <div class="panel-card">
+                            <div class="panel-header">
+                                <h3 class="panel-title">Issue Equipment to Student</h3>
+                                <span class="panel-subtitle">Create a new borrowing transaction in MySQL</span>
+                            </div>
+
+                            <form id="issueEquipmentForm" class="form-grid">
+                                <div class="form-group">
+                                    <label for="issueStudentSelect">Select Student: <span class="required">*</span></label>
+                                    <select id="issueStudentSelect" required>
+                                        <option value="">-- Choose Student --</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="issueEquipmentSelect">Select Equipment: <span class="required">*</span></label>
+                                    <select id="issueEquipmentSelect" required>
+                                        <option value="">-- Choose Equipment --</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group stock-preview-group">
+                                    <label>Current Available Stock:</label>
+                                    <div class="stock-badge" id="stockPreviewBadge">Select equipment</div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="issueQuantityInput">Quantity to Issue: <span class="required">*</span></label>
+                                    <input type="number" id="issueQuantityInput" min="1" value="1" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="issueDateInput">Issue Date: <span class="required">*</span></label>
+                                    <input type="date" id="issueDateInput" required>
+                                </div>
+
+                                <div class="form-actions-full">
+                                    <button type="submit" class="btn btn-primary btn-lg" id="btnSubmitIssue">
+                                        <span class="btn-icon">📤</span> Issue Equipment
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ========================================== -->
+                <!-- 5. RETURN EQUIPMENT PAGE                   -->
+                <!-- ========================================== -->
+                <section class="page-section" id="section-return">
+                    <!-- Quick Return Transaction Form -->
+                    <div class="panel-card" style="margin-bottom: 24px;">
+                        <div class="panel-header">
+                            <div>
+                                <h3 class="panel-title">📥 Return Equipment Transaction</h3>
+                                <span class="panel-subtitle">Select an active loan below or click 'Return' directly on any record</span>
+                            </div>
+                        </div>
+                        <form id="quickReturnForm">
+                            <div class="form-row">
+                                <div class="form-group" style="flex: 2;">
+                                    <label for="returnSelectIssue">Select Active Loan: <span class="required">*</span></label>
+                                    <select id="returnSelectIssue" required>
+                                        <option value="">-- Choose Active Loan to Return --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label for="returnDateInput">Return Date:</label>
+                                    <input type="date" id="returnDateInput">
+                                </div>
+                            </div>
+                            <div id="selectedLoanDetailsBox" style="display: none; background: #0b1329; border: 1px solid #1e293b; border-radius: 8px; padding: 12px; margin-bottom: 16px; font-size: 13px;">
+                                <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                                    <span>Borrower: <strong id="returnDetailStudent" style="color: #60a5fa;">-</strong></span>
+                                    <span>Equipment: <strong id="returnDetailEquip" style="color: #34d399;">-</strong></span>
+                                    <span>Borrowed Qty: <strong id="returnDetailQty" style="color: #fbbf24;">-</strong></span>
+                                    <span>Issue Date: <strong id="returnDetailDate" style="color: #94a3b8;">-</strong></span>
+                                </div>
+                            </div>
+                            <div class="form-actions-full">
+                                <button type="submit" class="btn btn-success btn-lg" id="btnSubmitQuickReturn">
+                                    <span class="btn-icon">↩</span> Return &amp; Replenish Stock
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Responsive Filter & Search Toolbar -->
+                    <div class="section-toolbar">
+                        <div class="toolbar-left">
+                            <div class="search-box">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" id="returnSearchInput" placeholder="Search by student, equipment, or loan ID...">
+                            </div>
+                            <div class="filter-box">
+                                <label for="returnStatusFilter">Status:</label>
+                                <select id="returnStatusFilter">
+                                    <option value="ISSUED">Pending Return (Active)</option>
+                                    <option value="ALL">All Loans</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="toolbar-right">
+                            <div class="view-toggle-group">
+                                <button type="button" class="view-toggle-btn active" id="btnReturnCardsView" title="Card View (Mobile Optimized)">Cards</button>
+                                <button type="button" class="view-toggle-btn" id="btnReturnTableView" title="Table View">Table</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel-card">
+                        <div class="panel-header">
+                            <div>
+                                <h3 class="panel-title">Active Borrowing Ledger</h3>
+                                <span class="panel-subtitle">Equipment currently issued to students pending return</span>
+                            </div>
+                            <span class="badge badge-amber" id="activeLoansCountBadge">0 Active Loans</span>
+                        </div>
+
+                        <!-- Card Grid View for Mobile / Tablets -->
+                        <div class="return-cards-grid" id="activeIssuesCardsContainer">
+                            <div class="text-center p-4">Loading loans...</div>
+                        </div>
+
+                        <!-- Table View with Responsive Scroll -->
+                        <div class="table-responsive" id="activeIssuesTableWrapper" style="display: none;">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Issue ID</th>
+                                        <th>Student Name</th>
+                                        <th>Equipment Name</th>
+                                        <th>Quantity</th>
+                                        <th>Issue Date</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="activeIssuesTableBody">
+                                    <tr><td colspan="7" class="text-center">Loading active loans...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- ==================================================== -->
+    <!-- MODALS                                               -->
+    <!-- ==================================================== -->
+
+    <!-- Add/Edit Equipment Modal -->
+    <div class="modal-backdrop" id="equipmentModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title" id="equipmentModalTitle">Add New Equipment</h3>
+                <button class="modal-close-btn" id="closeEquipmentModalBtn">&times;</button>
+            </div>
+            <form id="equipmentForm">
+                <input type="hidden" id="equipmentIdHidden">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="equipmentNameInput">Equipment Name: <span class="required">*</span></label>
+                        <input type="text" id="equipmentNameInput" placeholder="e.g. Football, Badminton Racket" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="equipmentCategoryInput">Category: <span class="required">*</span></label>
+                        <select id="equipmentCategoryInput" required>
+                            <option value="Outdoor">Outdoor</option>
+                            <option value="Indoor">Indoor</option>
+                            <option value="Fitness">Fitness</option>
+                            <option value="Athletics">Athletics</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="equipmentQuantityInput">Total Quantity: <span class="required">*</span></label>
+                        <input type="number" id="equipmentQuantityInput" min="1" value="10" required>
+                        <small class="form-hint" id="totalQuantityHint">Total stock owned by the college.</small>
+                    </div>
+
+                    <div class="form-group" id="availableQuantityGroup" style="display: none;">
+                        <label for="equipmentAvailableInput">Available Quantity: <span class="required">*</span></label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="number" id="equipmentAvailableInput" min="0" style="flex: 1;">
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="window.adjustModalAvailable(-1)">-1</button>
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="window.adjustModalAvailable(1)">+1</button>
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="window.adjustModalAvailable(5)">+5</button>
+                        </div>
+                        <small class="form-hint" id="availableStockHint">Add or remove availability of created equipment.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="equipmentDescInput">Description: <span class="optional">(Optional)</span></label>
+                        <textarea id="equipmentDescInput" rows="3" placeholder="Condition, brand, size or specifications"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancelEquipmentBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveEquipmentBtn">Save Equipment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add/Edit Student Modal -->
+    <div class="modal-backdrop" id="studentModal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 class="modal-title" id="studentModalTitle">Register Student</h3>
+                <button class="modal-close-btn" id="closeStudentModalBtn">&times;</button>
+            </div>
+            <form id="studentForm">
+                <input type="hidden" id="studentIdHidden">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="studentNameInput">Full Name: <span class="required">*</span></label>
+                        <input type="text" id="studentNameInput" placeholder="e.g. Aarav Sharma" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="studentEmailInput">College Email: <span class="required">*</span></label>
+                        <input type="email" id="studentEmailInput" placeholder="e.g. aarav@college.edu" required>
+                        <small class="form-hint">Must be unique across all registered students.</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="studentPhoneInput">Phone Number: <span class="required">*</span></label>
+                        <input type="tel" id="studentPhoneInput" placeholder="e.g. 9876543210" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="studentDeptInput">Department: <span class="optional">(Optional)</span></label>
+                        <input type="text" id="studentDeptInput" placeholder="e.g. Computer Science Engineering">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="studentSemInput">Class / Semester: <span class="optional">(Optional)</span></label>
+                        <input type="text" id="studentSemInput" placeholder="e.g. Semester 2">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="cancelStudentBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveStudentBtn">Save Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
