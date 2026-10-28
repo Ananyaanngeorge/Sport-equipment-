@@ -50,4 +50,11 @@ public class IssueController {
         Issue returned = issueService.returnEquipment(id);
         return ResponseEntity.ok(returned);
     }
+
+    // PUT /api/issues/{id}/pay-fine (Pay / settle late fine)
+    @PutMapping("/{id}/pay-fine")
+    public ResponseEntity<Issue> payFine(@PathVariable Long id) {
+        Issue settled = issueService.payFine(id);
+        return ResponseEntity.ok(settled);
+    }
 }

@@ -44,6 +44,10 @@
                     <span class="nav-icon">📥</span>
                     <span class="nav-label">Return Equipment</span>
                 </button>
+                <button class="nav-item" data-page="fines">
+                    <span class="nav-icon">💰</span>
+                    <span class="nav-label">Fine Section (₹5/day)</span>
+                </button>
             </nav>
 
             <div class="sidebar-footer">
@@ -424,6 +428,49 @@
                                     <tr><td colspan="7" class="text-center">Loading active loans...</td></tr>
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ========================================== -->
+                <!-- 6. FINE & PENALTY SECTION (₹5 / DAY)       -->
+                <!-- ========================================== -->
+                <section class="page-section" id="section-fines">
+                    <div class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <h3 class="panel-title">💰 Equipment Delay Fine &amp; Penalty Counter</h3>
+                                <span class="panel-subtitle">College sports policy: ₹5 per day late return fine</span>
+                            </div>
+                            <span class="badge badge-red" id="finePolicyBadge">₹5 / Day Late Fee</span>
+                        </div>
+
+                        <div class="kpi-grid" style="margin-bottom: 20px;">
+                            <div class="kpi-card card-blue">
+                                <div class="kpi-content">
+                                    <span class="kpi-title">Fine Rate</span>
+                                    <h3 class="kpi-value">₹5 / Day</h3>
+                                    <span class="kpi-desc">Charged per overdue day</span>
+                                </div>
+                                <div class="kpi-icon-badge">⚖️</div>
+                            </div>
+                            <div class="kpi-card card-amber">
+                                <div class="kpi-content">
+                                    <span class="kpi-title">Overdue Policy</span>
+                                    <h3 class="kpi-value">1 Day = ₹5</h3>
+                                    <span class="kpi-desc">2 Days = ₹10, 3 Days = ₹15</span>
+                                </div>
+                                <div class="kpi-icon-badge">📅</div>
+                            </div>
+                        </div>
+
+                        <div class="form-container" style="background: rgba(15, 23, 42, 0.4); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+                            <h4 style="margin-bottom: 10px; color: #f8fafc;">Fine Calculation Rules</h4>
+                            <p style="font-size: 13px; color: #94a3b8; line-height: 1.6;">
+                                Students are required to return borrowed sports gear on or before the designated return date.
+                                If returned past the due date, an automatic late penalty of <strong>₹5 per day</strong> is levied on the student account.
+                                The fine amount is itemized on the return receipt and displayed on both student and administration dashboards.
+                            </p>
                         </div>
                     </div>
                 </section>

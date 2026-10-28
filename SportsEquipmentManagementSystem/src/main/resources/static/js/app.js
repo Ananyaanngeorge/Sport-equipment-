@@ -45,7 +45,8 @@ function setupNavigation() {
         equipment: 'Sports Equipment Inventory',
         students: 'Registered College Students',
         issue: 'Issue Equipment to Student',
-        return: 'Return Borrowed Equipment'
+        return: 'Return Borrowed Equipment',
+        fines: 'Delay Fine & Penalty Management (₹5/day)'
     };
 
     navItems.forEach(item => {
@@ -341,8 +342,11 @@ window.adjustModalAvailable = function(delta) {
     if (!availInput || !totalInput) return;
     const current = parseInt(availInput.value, 10) || 0;
     const total = parseInt(totalInput.value, 10) || 0;
-    const nextVal = Math.max(0, Math.min(total, current + delta));
+    const nextVal = Math.max(0, current + delta);
     availInput.value = nextVal;
+    if (nextVal > total) {
+        totalInput.value = nextVal;
+    }
 };
 
 function openEquipmentModal(eq = null) {
@@ -421,8 +425,7 @@ async function handleSaveEquipment(e) {
                 return;
             }
             if (availQty > totalQuantity) {
-                showToast(`Available quantity (${availQty}) cannot exceed total quantity (${totalQuantity}).`, 'error');
-                return;
+                payload.totalQuantity = availQty;
             }
             payload.availableQuantity = availQty;
         }

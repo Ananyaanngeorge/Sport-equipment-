@@ -5,15 +5,24 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 /**
- * Issue Entity representing equipment borrowing transactions.
+ * ============================================================================
+ * Issue Entity: Represents equipment checkout and return transactions.
  * Table: issue
- * Demonstrates @ManyToOne relationships with Student and Equipment entities.
+ * 
+ * Features late return fine management:
+ * - Overdue rate: ₹5.00 per day after expectedReturnDate.
+ * - Tracks fineAmount, finePaid status, and dynamic fine calculation.
+ * ============================================================================
  */
 @Entity
 @Table(name = "issue")
 public class Issue {
+
+    // Overdue fine policy: ₹5 per day late
+    public static final double FINE_RATE_PER_DAY = 5.0;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,6 +50,13 @@ public class Issue {
     @Column(name = "issue_date", nullable = false)
     private LocalDate issueDate;
 
+    // Due date for returning equipment (defaults to issueDate + 7 days)
+    @NotNull(message = "Expected return date is required")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @Column(name = "expected_return_date", nullable = false)
+    private LocalDate expectedReturnDate;
+
+    // Actual date when student returned the equipment
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     @Column(name = "return_date")
     private LocalDate returnDate;
@@ -49,20 +65,70 @@ public class Issue {
     @Column(nullable = false, length = 20)
     private String status = "ISSUED";
 
+    // Late Return Fine: ₹5 per day overdue
+    @Column(name = "fine_amount", nullable = false)
+    private Double fineAmount = 0.0;
+
+    // Fine Payment Status: true if fine paid or no fine, false if fine unpaid
+    @Column(name = "fine_paid", nullable = false)
+    private Boolean finePaid = false;
+
     // Default constructor
     public Issue() {
     }
 
     // Parameterized constructor
-    public Issue(Student student, Equipment equipment, Integer quantity, LocalDate issueDate, String status) {
+    public Issue(Student student, Equipment equipment, Integer quantity, LocalDate issueDate, LocalDate expectedReturnDate, String status) {
         this.student = student;
         this.equipment = equipment;
         this.quantity = quantity;
         this.issueDate = issueDate;
+        this.expectedReturnDate = expectedReturnDate;
         this.status = status;
+        this.fineAmount = 0.0;
+        this.finePaid = false;
     }
 
-    // Getters and Setters
+    // =========================================================================
+    // FINE CALCULATION BUSINESS METHODS (₹5 per day overdue)
+    // =========================================================================
+
+    /**
+     * Calculates the number of days overdue based on expected return date.
+     * If returned, compares returnDate with expectedReturnDate.
+     * If still ISSUED, compares today with expectedReturnDate.
+     */
+    public long getDaysOverdue() {
+        if (expectedReturnDate == null) {
+            return 0;
+        }
+        LocalDate compareDate = returnDate != null ? returnDate : LocalDate.now();
+        if (compareDate.isAfter(expectedReturnDate)) {
+            return ChronoUnit.DAYS.between(expectedReturnDate, compareDate);
+        }
+        return 0;
+    }
+
+    /**
+     * Checks if this issue is currently delayed/overdue.
+     */
+    public boolean isOverdue() {
+        return getDaysOverdue() > 0;
+    }
+
+    /**
+     * Calculates the overdue fine amount in Rupees (₹5 per day).
+     * Formula: days overdue * ₹5.00
+     */
+    public double calculateFine() {
+        long days = getDaysOverdue();
+        return days > 0 ? days * FINE_RATE_PER_DAY : 0.0;
+    }
+
+    // =========================================================================
+    // GETTERS AND SETTERS
+    // =========================================================================
+
     public Long getId() {
         return id;
     }
@@ -103,6 +169,14 @@ public class Issue {
         this.issueDate = issueDate;
     }
 
+    public LocalDate getExpectedReturnDate() {
+        return expectedReturnDate;
+    }
+
+    public void setExpectedReturnDate(LocalDate expectedReturnDate) {
+        this.expectedReturnDate = expectedReturnDate;
+    }
+
     public LocalDate getReturnDate() {
         return returnDate;
     }
@@ -117,5 +191,21 @@ public class Issue {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Double getFineAmount() {
+        return fineAmount;
+    }
+
+    public void setFineAmount(Double fineAmount) {
+        this.fineAmount = fineAmount;
+    }
+
+    public Boolean getFinePaid() {
+        return finePaid;
+    }
+
+    public void setFinePaid(Boolean finePaid) {
+        this.finePaid = finePaid;
     }
 }

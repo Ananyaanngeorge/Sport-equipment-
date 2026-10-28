@@ -23,14 +23,22 @@ public class IssueRequest {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate issueDate;
 
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    private LocalDate expectedReturnDate;
+
     public IssueRequest() {
     }
 
     public IssueRequest(Long studentId, Long equipmentId, Integer quantity, LocalDate issueDate) {
+        this(studentId, equipmentId, quantity, issueDate, issueDate != null ? issueDate.plusDays(7) : LocalDate.now().plusDays(7));
+    }
+
+    public IssueRequest(Long studentId, Long equipmentId, Integer quantity, LocalDate issueDate, LocalDate expectedReturnDate) {
         this.studentId = studentId;
         this.equipmentId = equipmentId;
         this.quantity = quantity;
         this.issueDate = issueDate;
+        this.expectedReturnDate = expectedReturnDate;
     }
 
     public Long getStudentId() {
@@ -63,5 +71,13 @@ public class IssueRequest {
 
     public void setIssueDate(LocalDate issueDate) {
         this.issueDate = issueDate;
+    }
+
+    public LocalDate getExpectedReturnDate() {
+        return expectedReturnDate;
+    }
+
+    public void setExpectedReturnDate(LocalDate expectedReturnDate) {
+        this.expectedReturnDate = expectedReturnDate;
     }
 }

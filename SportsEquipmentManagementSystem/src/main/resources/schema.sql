@@ -28,15 +28,18 @@ CREATE TABLE IF NOT EXISTS student (
     class_semester VARCHAR(50) NOT NULL
 );
 
--- 3. Issue Table (Foreign keys referencing student and equipment)
+-- 3. Issue Table (Foreign keys referencing student and equipment, with delay fine tracking)
 CREATE TABLE IF NOT EXISTS issue (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     student_id BIGINT NOT NULL,
     equipment_id BIGINT NOT NULL,
     quantity INT NOT NULL,
     issue_date DATE NOT NULL,
+    expected_return_date DATE NOT NULL,
     return_date DATE,
     status VARCHAR(20) NOT NULL DEFAULT 'ISSUED',
+    fine_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    fine_paid BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT fk_issue_student FOREIGN KEY (student_id) REFERENCES student(id) ON DELETE RESTRICT,
     CONSTRAINT fk_issue_equipment FOREIGN KEY (equipment_id) REFERENCES equipment(id) ON DELETE RESTRICT
 );

@@ -8,18 +8,19 @@ import com.example.sports.entity.Student;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Issue & Return Management Panel.
- * Handles issuing equipment to students and returning active borrowed gear.
+ * Handles issuing equipment to students, returning active borrowed gear,
+ * and tracking/settling overdue fines (₹5/day).
  */
 public class IssuePanel extends JPanel {
 
@@ -32,6 +33,7 @@ public class IssuePanel extends JPanel {
     private final JLabel lblAvailableQty = new JLabel("0");
     private final JSpinner spQuantity = new JSpinner(new SpinnerNumberModel(1, 1, 500, 1));
     private final JTextField txtIssueDate = new JTextField(LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE), 10);
+    private final JTextField txtExpectedReturnDate = new JTextField(LocalDate.now().plusDays(7).format(DateTimeFormatter.ISO_LOCAL_DATE), 10);
     private final JButton btnIssue = new JButton("Issue Equipment");
 
     // Active Issues Table
@@ -74,8 +76,8 @@ public class IssuePanel extends JPanel {
                 new EmptyBorder(16, 20, 16, 20)
         ));
 
-        JLabel formTitle = new JLabel("Issue Equipment to Student");
-        formTitle.setFont(new Font("Segoe UI", Font.BOLD, 17));
+        JLabel formTitle = new JLabel("Issue Equipment to Student (Late return fine: ₹5/day after due date)");
+        formTitle.setFont(new Font("Segoe UI", Font.BOLD, 16));
         formTitle.setForeground(new Color(30, 41, 59));
         issueFormBox.add(formTitle, BorderLayout.NORTH);
 
@@ -107,34 +109,53 @@ public class IssuePanel extends JPanel {
 
         JPanel pReq = new JPanel(new BorderLayout(4, 4));
         pReq.setOpaque(false);
-        pReq.add(new JLabel("Quantity to Issue: *"), BorderLayout.NORTH);
+        pReq.add(new JLabel("Quantity: *"), BorderLayout.NORTH);
         pReq.add(spQuantity, BorderLayout.CENTER);
 
         pQty.add(pAvail);
         pQty.add(pReq);
 
-        // Column 4: Issue Date
+        // Column 4: Issue Date & Due Date
+        JPanel pDates = new JPanel(new GridLayout(1, 2, 8, 0));
+        pDates.setOpaque(false);
+
         JPanel pDate = new JPanel(new BorderLayout(4, 4));
         pDate.setOpaque(false);
-        pDate.add(new JLabel("Issue Date (YYYY-MM-DD):"), BorderLayout.NORTH);
+        pDate.add(new JLabel("Issue Date:"), BorderLayout.NORTH);
         pDate.add(txtIssueDate, BorderLayout.CENTER);
 
-        // Column 5 & 6: Action Button
-        JPanel pAction = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 18));
+        JPanel pDueDate = new JPanel(new BorderLayout(4, 4));
+        pDueDate.setOpaque(false);
+        pDueDate.add(new JLabel("Due Date:"), BorderLayout.NORTH);
+        pDueDate.add(txtExpectedReturnDate, BorderLayout.CENTER);
+
+        pDates.add(pDate);
+        pDates.add(pDueDate);
+
+        // Column 5: Fine info note
+        JPanel pFineNotice = new JPanel(new BorderLayout(4, 4));
+        pFineNotice.setOpaque(false);
+        JLabel lblFineNote = new JLabel("<html><font color='#dc2626'><b>Overdue Fine Policy:</b></font><br>₹5 per day late automatically charged on overdue returns.</html>");
+        lblFineNote.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        pFineNotice.add(lblFineNote, BorderLayout.CENTER);
+
+        // Column 6: Action Button
+        JPanel pAction = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 18));
         pAction.setOpaque(false);
         btnIssue.setFont(new Font("Segoe UI", Font.BOLD, 13));
         btnIssue.setBackground(new Color(37, 99, 235));
         btnIssue.setForeground(Color.WHITE);
         btnIssue.setFocusPainted(false);
         btnIssue.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnIssue.setPreferredSize(new Dimension(180, 36));
+        btnIssue.setPreferredSize(new Dimension(170, 36));
         btnIssue.addActionListener(e -> handleIssueEquipment());
         pAction.add(btnIssue);
 
         grid.add(pStudent);
         grid.add(pEquip);
         grid.add(pQty);
-        grid.add(pDate);
+        grid.add(pDates);
+        grid.add(pFineNotice);
         grid.add(pAction);
 
         issueFormBox.add(grid, BorderLayout.CENTER);
@@ -153,9 +174,20 @@ public class IssuePanel extends JPanel {
 
         JPanel tableHeader = new JPanel(new BorderLayout());
         tableHeader.setOpaque(false);
-        JLabel tableTitle = new JLabel("Currently Borrowed Equipment (Active Issues)");
+        JLabel tableTitle = new JLabel("Currently Borrowed Equipment & Fine Tracking");
         tableTitle.setFont(new Font("Segoe UI", Font.BOLD, 17));
         tableTitle.setForeground(new Color(30, 41, 59));
+
+        JPanel tableBtnGroup = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        tableBtnGroup.setOpaque(false);
+
+        JButton btnPayFine = new JButton("💳 Pay Fine");
+        btnPayFine.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnPayFine.setBackground(new Color(245, 158, 11));
+        btnPayFine.setForeground(Color.WHITE);
+        btnPayFine.setFocusPainted(false);
+        btnPayFine.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        btnPayFine.addActionListener(e -> handlePayFine());
 
         JButton btnReturn = new JButton("↩ Return Equipment");
         btnReturn.setFont(new Font("Segoe UI", Font.BOLD, 13));
@@ -165,11 +197,14 @@ public class IssuePanel extends JPanel {
         btnReturn.setCursor(new Cursor(Cursor.HAND_CURSOR));
         btnReturn.addActionListener(e -> handleReturnEquipment());
 
+        tableBtnGroup.add(btnPayFine);
+        tableBtnGroup.add(btnReturn);
+
         tableHeader.add(tableTitle, BorderLayout.WEST);
-        tableHeader.add(btnReturn, BorderLayout.EAST);
+        tableHeader.add(tableBtnGroup, BorderLayout.EAST);
         tableContainer.add(tableHeader, BorderLayout.NORTH);
 
-        String[] columns = {"Issue ID", "Student Name", "Equipment", "Quantity", "Issue Date", "Status"};
+        String[] columns = {"Issue ID", "Student Name", "Equipment", "Quantity", "Issue Date", "Due Date", "Status", "Fine Status (₹5/day)"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -195,6 +230,8 @@ public class IssuePanel extends JPanel {
         table.getColumnModel().getColumn(3).setCellRenderer(center);
         table.getColumnModel().getColumn(4).setCellRenderer(center);
         table.getColumnModel().getColumn(5).setCellRenderer(center);
+        table.getColumnModel().getColumn(6).setCellRenderer(center);
+        table.getColumnModel().getColumn(7).setCellRenderer(center);
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(BorderFactory.createLineBorder(new Color(241, 245, 249)));
@@ -220,7 +257,7 @@ public class IssuePanel extends JPanel {
     }
 
     public void loadData() {
-        // Load Students and Equipment to populate dropdowns, and active issues for table
+        // Load Students and Equipment to populate dropdowns, and all active issues
         SwingWorker<Void, Void> worker = new SwingWorker<>() {
             List<Student> students;
             List<Equipment> equipment;
@@ -237,7 +274,7 @@ public class IssuePanel extends JPanel {
             @Override
             protected void done() {
                 try {
-                    get(); // Check for exceptions
+                    get();
 
                     // Populate students dropdown
                     cmbStudents.removeAllItems();
@@ -252,17 +289,28 @@ public class IssuePanel extends JPanel {
                     }
                     updateAvailableQuantityLabel();
 
-                    // Populate active issues table
+                    // Populate active issues table with fine info
                     currentActiveIssues = activeIssues;
                     tableModel.setRowCount(0);
                     for (Issue issue : activeIssues) {
+                        String fineStatus = "No Fine";
+                        if (issue.getExpectedReturnDate() != null) {
+                            long daysLate = ChronoUnit.DAYS.between(issue.getExpectedReturnDate(), LocalDate.now());
+                            if (daysLate > 0) {
+                                double fine = daysLate * 5.0;
+                                fineStatus = "⚠️ Overdue (" + daysLate + "d late: ₹" + fine + ")";
+                            }
+                        }
+
                         tableModel.addRow(new Object[]{
                                 issue.getId(),
                                 issue.getStudent() != null ? issue.getStudent().getFullName() : "-",
                                 issue.getEquipment() != null ? issue.getEquipment().getName() : "-",
                                 issue.getQuantity(),
                                 issue.getIssueDate(),
-                                issue.getStatus()
+                                issue.getExpectedReturnDate() != null ? issue.getExpectedReturnDate() : "-",
+                                issue.getStatus(),
+                                fineStatus
                         });
                     }
                 } catch (Exception e) {
@@ -299,18 +347,25 @@ public class IssuePanel extends JPanel {
         }
 
         LocalDate issueDate;
+        LocalDate expectedReturnDate;
         try {
             issueDate = LocalDate.parse(txtIssueDate.getText().trim());
+            expectedReturnDate = LocalDate.parse(txtExpectedReturnDate.getText().trim());
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Please enter a valid date in YYYY-MM-DD format.", "Invalid Date", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Please enter valid dates in YYYY-MM-DD format.", "Invalid Date", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        IssueRequest request = new IssueRequest(studentItem.student.getId(), equipItem.equipment.getId(), qty, issueDate);
+        if (expectedReturnDate.isBefore(issueDate)) {
+            JOptionPane.showMessageDialog(this, "Due date cannot be earlier than issue date.", "Invalid Due Date", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        IssueRequest request = new IssueRequest(studentItem.student.getId(), equipItem.equipment.getId(), qty, issueDate, expectedReturnDate);
 
         try {
             apiClient.post("/issues", request, Issue.class);
-            JOptionPane.showMessageDialog(this, "Equipment issued successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Equipment issued successfully.\nDue date set: " + expectedReturnDate + "\nLate fine policy: ₹5/day after due date.", "Success", JOptionPane.INFORMATION_MESSAGE);
             loadData();
             if (onDataChanged != null) onDataChanged.run();
         } catch (Exception e) {
@@ -329,21 +384,71 @@ public class IssuePanel extends JPanel {
         String studentName = (String) tableModel.getValueAt(selectedRow, 1);
         String equipmentName = (String) tableModel.getValueAt(selectedRow, 2);
         int qty = (Integer) tableModel.getValueAt(selectedRow, 3);
+        String dueDateStr = String.valueOf(tableModel.getValueAt(selectedRow, 5));
 
-        int confirm = JOptionPane.showConfirmDialog(this,
-                "Are you sure you want to return this equipment?\n" +
-                        "Student: " + studentName + "\n" +
-                        "Equipment: " + equipmentName + " (" + qty + " units)",
-                "Confirm Return", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+        // Calculate potential overdue fine
+        double potentialFine = 0.0;
+        long daysDelayed = 0;
+        try {
+            LocalDate due = LocalDate.parse(dueDateStr);
+            if (LocalDate.now().isAfter(due)) {
+                daysDelayed = ChronoUnit.DAYS.between(due, LocalDate.now());
+                potentialFine = daysDelayed * 5.0;
+            }
+        } catch (Exception ignored) {}
+
+        String message = "Are you sure you want to return this equipment?\n\n" +
+                "Student: " + studentName + "\n" +
+                "Equipment: " + equipmentName + " (" + qty + " units)\n" +
+                "Due Date: " + dueDateStr + "\n";
+
+        if (potentialFine > 0) {
+            message += "\n⚠️ LATE RETURN ALERT:\n" +
+                    daysDelayed + " days overdue!\n" +
+                    "Calculated Fine: ₹" + String.format("%.2f", potentialFine) + " (at ₹5 per day)\n";
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(this, message, "Confirm Equipment Return", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 
         if (confirm == JOptionPane.YES_OPTION) {
             try {
-                apiClient.put("/issues/" + issueId + "/return", null, Issue.class);
-                JOptionPane.showMessageDialog(this, "Equipment returned successfully. Inventory updated.", "Success", JOptionPane.INFORMATION_MESSAGE);
+                Issue returned = apiClient.put("/issues/" + issueId + "/return", null, Issue.class);
+                String resultMsg = "Equipment returned successfully. Inventory stock has been restored.";
+                if (returned != null && returned.getFineAmount() != null && returned.getFineAmount() > 0) {
+                    resultMsg += "\n\n⚠️ Late fine of ₹" + returned.getFineAmount() + " recorded against " + studentName + ".\nPlease collect fine payment.";
+                }
+                JOptionPane.showMessageDialog(this, resultMsg, "Return Processed", JOptionPane.INFORMATION_MESSAGE);
                 loadData();
                 if (onDataChanged != null) onDataChanged.run();
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, e.getMessage(), "Return Failed", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void handlePayFine() {
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow < 0) {
+            JOptionPane.showMessageDialog(this, "Please select an issue record to pay / settle fine.", "Selection Required", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        Long issueId = (Long) tableModel.getValueAt(selectedRow, 0);
+        String studentName = (String) tableModel.getValueAt(selectedRow, 1);
+        String fineCol = String.valueOf(tableModel.getValueAt(selectedRow, 7));
+
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Settle fine for:\nStudent: " + studentName + "\nStatus: " + fineCol + "\n\nMark fine as PAID?",
+                "Settle Late Fine", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            try {
+                apiClient.put("/issues/" + issueId + "/pay-fine", null, Issue.class);
+                JOptionPane.showMessageDialog(this, "Fine marked as PAID successfully.", "Fine Settled", JOptionPane.INFORMATION_MESSAGE);
+                loadData();
+                if (onDataChanged != null) onDataChanged.run();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, e.getMessage(), "Error Settling Fine", JOptionPane.ERROR_MESSAGE);
             }
         }
     }

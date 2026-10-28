@@ -76,9 +76,14 @@ public class IssueService {
         // 6. Set status to ISSUED
         issue.setStatus("ISSUED");
 
-        // 7. Set issue date (use provided date or today)
-        issue.setIssueDate(request.getIssueDate() != null ? request.getIssueDate() : LocalDate.now());
+        // 7. Set issue date & expected return date (defaults to 7 days from issue date)
+        LocalDate issueDate = request.getIssueDate() != null ? request.getIssueDate() : LocalDate.now();
+        LocalDate expectedReturn = request.getExpectedReturnDate() != null ? request.getExpectedReturnDate() : issueDate.plusDays(7);
+        issue.setIssueDate(issueDate);
+        issue.setExpectedReturnDate(expectedReturn);
         issue.setReturnDate(null);
+        issue.setFineAmount(0.0);
+        issue.setFinePaid(false);
 
         // 8. Decrease available quantity
         equipment.setAvailableQuantity(equipment.getAvailableQuantity() - request.getQuantity());
@@ -108,8 +113,19 @@ public class IssueService {
         // 3. Change status to RETURNED
         issue.setStatus("RETURNED");
 
-        // 4. Set return date
-        issue.setReturnDate(LocalDate.now());
+        // 4. Set return date & calculate late fine (₹5 per day)
+        LocalDate returnDate = LocalDate.now();
+        issue.setReturnDate(returnDate);
+        if (issue.getExpectedReturnDate() != null) {
+            long daysDelayed = java.time.temporal.ChronoUnit.DAYS.between(issue.getExpectedReturnDate(), returnDate);
+            if (daysDelayed > 0) {
+                issue.setFineAmount((double) (daysDelayed * 5));
+                issue.setFinePaid(false);
+            } else {
+                issue.setFineAmount(0.0);
+                issue.setFinePaid(true);
+            }
+        }
 
         // 5. Increase equipment available quantity
         equipment.setAvailableQuantity(equipment.getAvailableQuantity() + issue.getQuantity());
@@ -121,6 +137,18 @@ public class IssueService {
 
         // 6. Save changes
         equipmentRepository.save(equipment);
+        return issueRepository.save(issue);
+    }
+
+    /**
+     * Settle / pay late return fine.
+     */
+    @Transactional
+    public Issue payFine(Long issueId) {
+        Issue issue = issueRepository.findById(issueId)
+                .orElseThrow(() -> new ResourceNotFoundException("Issue record not found with ID: " + issueId));
+
+        issue.setFinePaid(true);
         return issueRepository.save(issue);
     }
 }
